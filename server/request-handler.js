@@ -1,5 +1,5 @@
 /*************************************************************
-
+// Bongani Mashele
 You should implement your request handler function in this file.
 
 requestHandler is already getting passed to http.createServer()
@@ -11,6 +11,13 @@ this file and include it in basic-server.js so that it actually works.
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
+
+var defaultCorsHeaders = {
+  'access-control-allow-origin': '*',
+  'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'access-control-allow-headers': 'content-type, accept',
+  'access-control-max-age': 10 // Seconds.
+};
 
 var requestHandler = function(request, response) {
   // Request and Response come from node's http module.
@@ -27,6 +34,7 @@ var requestHandler = function(request, response) {
   // Adding more logging to your server can be an easy way to get passive
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
+
   console.log('Serving request type ' + request.method + ' for url ' + request.url);
 
   // The outgoing status.
@@ -44,6 +52,56 @@ var requestHandler = function(request, response) {
   // .writeHead() writes to the request line and headers of the response,
   // which includes the status and all headers.
   response.writeHead(statusCode, headers);
+
+  // Make your Node server implement the URLs you used for your chat client (eg /classes/messages).
+
+  let messageId = 1;
+  let messages = [
+    {
+      username: 'shawndrost',
+      text: 'trololo',
+      roomname: '4chan',
+      messageId: messageId
+    },
+    {
+      username: 'shawn',
+      text: 'trololo',
+      roomname: 'test',
+      messageId: 2
+    },
+  ];
+
+  if (request.url === '/classes/messages') {
+    if (request.method === 'GET') {
+
+      response.writeHead(statusCode, headers);
+      response.write(JSON.stringify({results: messages}));
+      // console.log(response);
+      response.end();
+
+      // response.on('end', () => {
+      //   data.results = []
+      //   response.write(JSON.stringify({results: messages}));
+      //   console.log(response);
+      // })
+      console.log(JSON.stringify(messages));
+    } else if (request.method === 'POST') {
+      statusCode = 201;
+      headers['Content-Type'] = 'application/json';
+      var body = '';
+      response.writeHead(statusCode, headers);
+      request
+        .on('data', (chunk) => {
+          body += chunk;
+        })
+        .on('end', () => {
+          JSON.parse(body);
+        });
+    }
+  } else {
+    statusCode = 404;
+    response.writeHead(statusCode, headers);
+  }
 
   // Make sure to always call response.end() - Node may not send
   // anything back to the client until you do. The string you pass to
@@ -64,10 +122,6 @@ var requestHandler = function(request, response) {
 //
 // Another way to get around this restriction is to serve you chat
 // client from this domain by setting up static file serving.
-var defaultCorsHeaders = {
-  'access-control-allow-origin': '*',
-  'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'access-control-allow-headers': 'content-type, accept',
-  'access-control-max-age': 10 // Seconds.
-};
 
+
+module.exports.requestHandler = requestHandler;
