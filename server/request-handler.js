@@ -1,5 +1,4 @@
 /*************************************************************
-// Bongani Mashele
 You should implement your request handler function in this file.
 
 requestHandler is already getting passed to http.createServer()
@@ -11,15 +10,16 @@ this file and include it in basic-server.js so that it actually works.
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
-
+var url = require('url');
 var defaultCorsHeaders = {
   'access-control-allow-origin': '*',
   'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
   'access-control-allow-headers': 'content-type, accept',
-  'access-control-max-age': 10 // Seconds.
+  'access-control-max-age': 10, // Seconds.
+  'Content-Type': 'application/json'
 };
 
-var requestHandler = function(request, response) {
+exports.requestHandler = function(request, response) {
   // Request and Response come from node's http module.
   //
   // They include information about both the incoming request, such as
@@ -55,48 +55,58 @@ var requestHandler = function(request, response) {
 
   // Make your Node server implement the URLs you used for your chat client (eg /classes/messages).
 
-  let messageId = 1;
+  var objectId = 1;
   let messages = [
     {
-      username: 'shawndrost',
-      text: 'trololo',
-      roomname: '4chan',
-      messageId: messageId
+      username: 'Jono',
+      text: 'Do my bidding!',
+      roomname: 'lobby',
+      objectId: objectId
     },
     {
-      username: 'shawn',
-      text: 'trololo',
-      roomname: 'test',
-      messageId: 2
+      username: 'Jono2',
+      text: 'Do my bidding2!',
+      roomname: 'lobby',
+      objectId: objectId
     },
+    {
+      username: 'Jono3',
+      text: 'Do my bidding3!',
+      roomname: 'lobby5',
+      objectId: objectId
+    }
   ];
+  var pathName = url.parse(request.url).pathname;
 
-  if (request.url === '/classes/messages') {
+  if (pathName === '/classes/messages') {
     if (request.method === 'GET') {
-
+      statusCode = 200;
+      headers['Content-Type'] = 'application/json';
       response.writeHead(statusCode, headers);
-      response.write(JSON.stringify({results: messages}));
-      // console.log(response);
-      response.end();
+      response.end(JSON.stringify({results: messages}));
 
-      // response.on('end', () => {
-      //   data.results = []
-      //   response.write(JSON.stringify({results: messages}));
-      //   console.log(response);
-      // })
-      console.log(JSON.stringify(messages));
     } else if (request.method === 'POST') {
       statusCode = 201;
       headers['Content-Type'] = 'application/json';
-      var body = '';
       response.writeHead(statusCode, headers);
-      request
-        .on('data', (chunk) => {
-          body += chunk;
-        })
-        .on('end', () => {
-          JSON.parse(body);
-        });
+
+      request.on('data', function(data) {
+
+        var stringData = JSON.parse(data.toString());
+        stringData.objectId = objectId;
+        messages.push(stringData);
+        objectId++;
+      });
+      statusCode = 201;
+      headers['Content-Type'] = 'application/json';
+      response.writeHead(statusCode, headers);
+      response.end(JSON.stringify({results: messages}));
+
+    } else if (request.method === 'OPTIONS') {
+      statusCode = 200;
+      headers['Content-Type'] = 'application/json';
+      response.writeHead(statusCode, headers);
+      response.end(JSON.stringify({results: messages}));
     }
   } else {
     statusCode = 404;
@@ -112,16 +122,3 @@ var requestHandler = function(request, response) {
   // node to actually send all the data over to the client.
   response.end('Hello, World!');
 };
-
-// These headers will allow Cross-Origin Resource Sharing (CORS).
-// This code allows this server to talk to websites that
-// are on different domains, for instance, your chat client.
-//
-// Your chat client is running from a url like file://your/chat/client/index.html,
-// which is considered a different domain.
-//
-// Another way to get around this restriction is to serve you chat
-// client from this domain by setting up static file serving.
-
-
-module.exports.requestHandler = requestHandler;
